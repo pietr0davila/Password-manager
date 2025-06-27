@@ -1,11 +1,17 @@
-from accounts_treat.account import account_menu
+from accounts_treat.utils import account_menu
 from accounts_treat.create import create_account
 from accounts_treat.login import login
 from Databases import Databases
 from management.user_menu import user_menu
+from cryptography.fernet import Fernet
+
 def main():
-    Databases(db_name="databases/users.db", table="users").setup_db()
-    Databases(db_name="databases/manager.db", table="manager_passwords").setup_db()
+    key = Fernet.generate_key()
+    with open("key.secret", "wb") as file:
+        file.write(key)
+
+    Databases(db_name="databases/users.db", table="users").setup_user_db()
+    Databases(db_name="databases/manager.db", table="manage_passwords").setup_password_db()
 
     menu_account_value = account_menu()
     if menu_account_value == "value_error":
@@ -15,11 +21,11 @@ def main():
     elif menu_account_value == "create":
         create_account()
     elif menu_account_value == "login":
-        is_logged = login()
-        if is_logged is not False:
-            user_menu(is_logged)
+        user_id, username = login()
+        if isinstance(user_id, int):
+            user_menu(user_id, username)
         else:
-            user_menu(False)  
+            user_menu(False, False)  
         
 if __name__ == "__main__":
     main()
